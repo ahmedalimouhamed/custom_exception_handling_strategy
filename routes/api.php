@@ -11,7 +11,7 @@ use App\Http\Controllers\OrderController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
-})->middleware('auth:sanctum');
+})->middleware(['auth:sanctum']);
 
 Route::apiResource('products', ProductController::class);
 Route::apiResource('admins', AdminController::class);

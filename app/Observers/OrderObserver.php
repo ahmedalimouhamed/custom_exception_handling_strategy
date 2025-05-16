@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\Order;
 use Illuminate\Support\Facades\Log;
+use App\Events\OrderPlaced;
 
 class OrderObserver
 {
@@ -13,6 +14,7 @@ class OrderObserver
     public function created(Order $order): void
     {
         Log::info("Order #{$order->id} created for client #{$order->client->id}");
+        event(new OrderPlaced($order));
     }
 
     /**

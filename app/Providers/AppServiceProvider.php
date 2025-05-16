@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Exceptions\ApiExceptionHandler;
 use App\Models\Order;
 use App\Observers\OrderObserver;
 use App\Services\Contracts\OrderServiceInterface;
@@ -15,6 +16,7 @@ use App\Observers\FournisseurObserver;
 use App\Models\Product;
 use App\Observers\ProductObserver;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,6 +26,9 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(OrderServiceInterface::class, OrderService::class);
+        $this->app->extend(ExceptionHandler::class, function(ExceptionHandler $handler, $app){
+            return new ApiExceptionHandler($handler);
+        });
     }
 
     /**

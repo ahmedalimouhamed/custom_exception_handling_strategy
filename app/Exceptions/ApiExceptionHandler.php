@@ -1,14 +1,17 @@
 <?php
 
+namespace App\Exceptions;
+
 use App\Exceptions\AppException;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
-use Throwable;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Validation\ValidationException;
+use Throwable;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
-class Handler extends ExceptionHandler
+
+class ApiExceptionHandler extends ExceptionHandler
 {
     protected ExceptionHandler $base;
 
@@ -19,22 +22,11 @@ class Handler extends ExceptionHandler
 
     public function report(Throwable $e): void
     {
-        if ($e instanceof AppException) {
-            Log::error("Exception occurred: ", [
-                'error'     => $e->getMessage(),
-                'code'      => $e->getCode(),
-                'context'   => $e->getContext(),
-                'file'      => $e->getFile(),
-                'line'      => $e->getLine(),
-            ]);
-        }
-
         $this->base->report($e);
     }
 
     public function render($request, Throwable $e)
     {
-
         if($e instanceof AuthenticationException){
             return response()->json([
                 'success' => false,
@@ -50,25 +42,28 @@ class Handler extends ExceptionHandler
             ], 422);
         }
 
+        if($e instanceof ModelNotFoundException){
+            return response()->json([
+                'success' => false,
+                'message' => 'Resource not found',
+            ], 404);
+        }
+
+        if($e instanceof HttpExceptionInterface){
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage() ?: 'HTTP error',
+            ], $e->getStatusCode());
+        }
+
         if($e instanceof AppException){
-
-            Log::error("Exception occurred: ", [
-                'error'     => $e->getMessage(),
-                'code'      => $e->getCode(),
-                'context'   => $e->getContext(),
-                'file'      => $e->getFile(),
-                'line'      => $e->getLine(),
-            ]);
-
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
                 'code' => $e->getCode(),
-                'context' => $e->getContext(),
-            ], 400);
+            ], $e->getCode());
         }
 
-        Log::error($e);
         return $this->base->render($request, $e);
     }
 }
